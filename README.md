@@ -3,9 +3,14 @@ A sentence paraphraser based on dependency parsing
 and word embedding similarity.
 
 How the paraphraser works:
-1. 
+1. Create a random projection of the dependency tree 
+2. Replace several words with similar ones
 
 The basic usage (for Russian language) is based on Natasha library:
+
+```
+pip install dependency-paraphraser natasha
+```
 
 ```python
 import dependency_paraphraser.natasha
