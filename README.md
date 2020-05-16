@@ -59,7 +59,9 @@ pip install dependency-paraphraser ufal.udpipe pyconll
 import dependency_paraphraser.udpipe
 path = 'english-ewt-ud-2.5-191206.udpipe'
 pipe = dependency_paraphraser.udpipe.Model(path)
-projector = dependency_paraphraser.udpipe.en_udpipe_projectortext = 'in April 2012 they released the videoclip for a new single entitled Giorgio Mastrota'
+projector = dependency_paraphraser.udpipe.en_udpipe_projector
+
+text = 'in April 2012 they released the videoclip for a new single entitled Giorgio Mastrota'
 for i in range(3):
     print(dependency_paraphraser.udpipe.paraphrase(text, pipe, projector=projector, tree_temperature=1))
 # they released the videoclip in April 2012 for a new entitled Mastrota single Giorgio

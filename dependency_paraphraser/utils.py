@@ -17,6 +17,7 @@ def nat2ch(sentence):
         id2children[id2idx.get(tok.head_id, -1)].append(id2idx[tok.id])
     return id2children
 
+
 def anneal(p, t=1):
     """ Modify a probability by applying temperature to it. """
     if t == 1:
