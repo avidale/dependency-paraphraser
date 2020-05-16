@@ -9,13 +9,17 @@ INFLECTABLES = {
 DEFAULT_INFLECTABLES = ['Number', 'Case', 'VerbForm', 'Person', 'Tense', 'Mood']  # 'Gender',
 
 
-def morph_synonyms(token, w2v, morph_vocab, initial_k=30, k=10, threshold=0.0):
-    token.lemmatize(morph_vocab)
+def morph_synonyms(token, w2v, morph_vocab=None, initial_k=30, k=10, threshold=0.0):
+    if morph_vocab and hasattr(token, 'lemmatize'):
+        # natasha tokens require lemmatization
+        token.lemmatize(morph_vocab)
     text = token.lemma
     neighbours = []
     if text not in w2v:
         return neighbours
     pairs = w2v.most_similar(text, topn=initial_k)
+    if not morph_vocab:
+        return [pair for pair in pairs[:k] if pair[-1] >= threshold]
     for pair in pairs:
         if len(neighbours) >= k:
             break
@@ -32,21 +36,21 @@ def morph_synonyms(token, w2v, morph_vocab, initial_k=30, k=10, threshold=0.0):
                     continue
                 if word.word == text:
                     break
-                neighbours.append((pair[0], word.word, pair[1]))
+                neighbours.append((word.word, pair[1]))
                 break
     return neighbours
 
 
-def replace_synonyms(tokens, w2v, morph_vocab, min_sim=0.6, p_rep=0.5):
+def replace_synonyms(tokens, w2v, morph_vocab=None, min_sim=0.6, p_rep=0.5):
     result = []
     for token in tokens:
         if random.random() > p_rep:
             result.append(token.text)
             continue
-        neighbors = morph_synonyms(token, w2v, morph_vocab, threshold=min_sim)
+        neighbors = morph_synonyms(token, w2v, morph_vocab=morph_vocab, threshold=min_sim)
 
         if neighbors:
-            result.append(random.choice(neighbors)[1])
+            result.append(random.choice(neighbors)[0])
         else:
             result.append(token.text)
     return result

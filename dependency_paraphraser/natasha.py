@@ -1,5 +1,4 @@
-import os
-import pickle
+from dependency_paraphraser.pretrained_projectors import natasha_projector
 
 
 from natasha import (
@@ -24,17 +23,13 @@ syntax_parser = NewsSyntaxParser(emb)
 gensim_emb = None
 
 
-with open(os.path.join(os.path.dirname(__file__), 'models', 'natasha_projector.pkl'), 'rb') as f:
-    projector = pickle.load(f)
-
-
 def use_news_embeddings():
     """ Convert navec embeddings to gensim format to use for synonym replacement """
     global gensim_emb
     gensim_emb = emb.as_gensim
 
 
-def paraphrase(text, tree_temperature=0.5, w2v=None, min_sim=0.5, p_rep=0.5):
+def paraphrase(text, tree_temperature=0.5, w2v=None, min_sim=0.5, p_rep=0.5, projector=natasha_projector):
     doc = Doc(text)
     doc.segment(segmenter)
     doc.tag_morph(morph_tagger)

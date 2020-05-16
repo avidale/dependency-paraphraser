@@ -1,1 +1,2 @@
 include dependency_paraphraser/models/natasha_projector.pkl
+include dependency_paraphraser/models/en_udpipe_projector.pkl
