@@ -45,14 +45,51 @@ def sent2xy(sent, sentence_format='natasha'):
     return pairs_x, pairs_y, pairs_ids
 
 
+def find_roots(id2children):
+    """ Find the set of roots - the top nodes of all trees in the graph """
+    id2parent = {}
+    id2root = {}
+
+    for parent_id, children_ids in id2children.items():
+        for child_id in children_ids:
+            id2parent[child_id] = parent_id
+
+    def find_root(node_id, stack=None):
+        parent_id = id2parent.get(node_id)
+        if parent_id in id2root:
+            return id2root[parent_id]
+        if parent_id == node_id or parent_id is None:
+            root_id = node_id
+        elif parent_id == -1:
+            root_id = parent_id
+        else:
+            if stack is None:
+                stack = set()
+            if node_id in stack:  # the "tree" is cyclic
+                root_id = node_id
+            else:
+                stack.add(node_id)
+                root_id = find_root(parent_id, stack=stack)
+        id2root[node_id] = root_id
+        return root_id
+
+    for child_id in id2parent:
+        find_root(child_id)
+
+    roots = set(id2root.values())
+    return roots
+
+
 def project_tree_randomly(id_to_children, pair_to_proba=None, root_id=-1, temperature=1, shuffle=True):
     """
     Project a tree into a sequence, optionally with a random order of children.
     Return the list of token indices.
     """
-    if root_id not in id_to_children and root_id != -1:
+    if root_id not in id_to_children:
+        if root_id == -1:  # a sentence with empty root and no children is empty
+            return []
         return [root_id]
-    children_ids = id_to_children[root_id][:]
+    children_ids = [c for c in id_to_children[root_id] if c != root_id]
 
     ids = children_ids if root_id == -1 else [root_id] + children_ids
 
@@ -90,7 +127,12 @@ def make_tree_projection(sent, model, sentence_format='natasha', temperature=1):
     pair2proba = {pair: proba for pair, proba in zip(pids, preds)}
     ch = nat2ch(sent) if sentence_format == 'natasha' else conll2ch(sent)
     tokens = sent.tokens if sentence_format == 'natasha' else sent
-    tokens = [
-        tokens[t] for t in project_tree_randomly(ch, pair_to_proba=pair2proba, temperature=temperature)
+    roots = find_roots(ch)
+    # filter out possible recursion
+    ch = {k: [v for v in vv if v not in roots] for k, vv in ch.items()}
+    positions = [
+        t
+        for root_id in roots
+        for t in project_tree_randomly(ch, pair_to_proba=pair2proba, temperature=temperature, root_id=root_id)
     ]
-    return tokens
+    return [tokens[t] for t in positions]
