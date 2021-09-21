@@ -44,13 +44,19 @@ def morph_synonyms(token, w2v, morph_vocab=None, initial_k=30, k=10, threshold=0
 def replace_synonyms(tokens, w2v, morph_vocab=None, min_sim=0.6, p_rep=0.5):
     result = []
     for token in tokens:
+        if hasattr(token, 'text'):
+            text = token.text
+        elif hasattr(token, 'form'):
+            text = token.form
+        else:
+            text = str(token)
         if random.random() > p_rep:
-            result.append(token.text)
+            result.append(text)
             continue
         neighbors = morph_synonyms(token, w2v, morph_vocab=morph_vocab, threshold=min_sim)
 
         if neighbors:
             result.append(random.choice(neighbors)[0])
         else:
-            result.append(token.text)
+            result.append(text)
     return result
